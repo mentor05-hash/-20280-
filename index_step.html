@@ -154,7 +154,8 @@ var SECTIONS=[
 var EXTRA=[
  {n:"부록 · 정시 수능100/저학생부/검정고시 길",f:"부록_정시수능100_저학생부_검정고시길.html"},
  {n:"전체 커리큘럼 · 종합안내",f:"00_전체커리큘럼_종합안내.html"},
- {n:"12주 로드맵",f:"00_로드맵_12주_커리큘럼.html"}
+ {n:"12주 로드맵",f:"00_로드맵_12주_커리큘럼.html"},
+ {n:"상위15개대 2028 시행계획 브리핑",f:"부록_상위15개대_2028시행계획.html"}
 ];
 
 function byId(x){return document.getElementById(x);}
@@ -165,23 +166,36 @@ function markDone(k){var a=getDone();if(a.indexOf(k)<0){a.push(k);try{localStora
 function updateProg(){var n=getDone().filter(function(x){return x[0]==="W";}).length;byId("progtxt").textContent=n+" / 17주";byId("progfill").style.width=Math.round(n/17*100)+"%";}
 
 var CUR=null,TYPE="",STEPS=[],STEP=0,STAGE="step",monthSubmitted=false,curInfo=null;
+var QS=new URLSearchParams(location.search);
+var UPTO=parseInt(QS.get("upto"),10); if(!UPTO||isNaN(UPTO)||UPTO<1) UPTO=99;
 
 /* 홈 렌더 */
 (function(){
  var host=byId("sections");
+ if(UPTO<99){
+  var mtxt=UPTO>=12?" + 월말 M1·M2·M3":(UPTO>=8?" + 월말 M1·M2":(UPTO>=4?" + 월말 M1":""));
+  var sb=document.createElement("div");
+  sb.style.cssText="background:var(--bluetint);border:1px solid #d4ddff;border-left:4px solid var(--blue);border-radius:12px;padding:11px 15px;margin:0 0 12px;font-size:13.5px;color:var(--blue2);font-weight:600";
+  sb.innerHTML='이번 공개 범위 · 1~'+UPTO+'주차'+mtxt;
+  host.appendChild(sb);
+ }
  SECTIONS.forEach(function(sec){
+  var vis=sec.ws.filter(function(idx){return (idx+1)<=UPTO;});
+  var monEnd=(sec.m!==null)?MONTHS[sec.m].incl[MONTHS[sec.m].incl.length-1]:0;
+  var showMon=(sec.m!==null)&&(UPTO>=monEnd);
+  if(vis.length===0 && !showMon) return;
   var h=document.createElement("div");h.className="mh";h.innerHTML=sec.t+' <span class="tag">'+sec.sub+'</span>';host.appendChild(h);
-  sec.ws.forEach(function(idx){
+  vis.forEach(function(idx){
    var w=WEEKS[idx],wn=idx+1;
    var r=document.createElement("div");r.className="row";
    r.innerHTML='<div class="num">'+w.k+'</div><div class="rt"><div class="nm"><b style="color:var(--blue2)">'+wn+'주차</b> · '+w.t+'</div><div class="sub">요약 · 상세 · 테스트</div></div><div class="rmeta">'+w.d+'<br>'+w.lv+'</div><span class="arr">›</span>';
    r.onclick=function(){openWeek(w);};host.appendChild(r);
   });
-  if(sec.m!==null){
+  if(showMon){
    var m=MONTHS[sec.m];
    var r=document.createElement("div");r.className="row mo";
-   r.innerHTML='<div class="num">'+m.k+'</div><div class="rt"><div class="nm"><b style="color:var(--green)">'+sec.ml+'</b></div><div class="sub">'+m.rng+' 누적 점검 · 월말</div></div><div class="rmeta">'+m.d+'<br>월말</div><span class="arr">›</span>';
-   r.onclick=function(){openMonth(m,sec.ml);};host.appendChild(r);
+   r.innerHTML='<div class="num">'+m.k+'</div><div class="rt"><div class="nm"><b style="color:var(--green)">'+sec.ml+'</b></div><div class="sub">'+m.rng+' 누적 · 별도 페이지(새 창)</div></div><div class="rmeta">'+m.d+'<br>월말 ↗</div><span class="arr">›</span>';
+   r.onclick=function(){window.open("month.html?m="+m.k+"&upto="+UPTO,"_blank");};host.appendChild(r);
   }
  });
  var rf=byId("refs");
